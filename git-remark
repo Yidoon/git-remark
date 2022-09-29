@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+
+# are we in a git repo?
+if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+  echo "Not a git repository." 1>&2
+  exit 1
+fi
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+the_branch=$current_branch
+local_branchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/heads/||')
+
+declare -a descs=(branch,description)
+
+function printTable() {
+  local -r delimiter="${1}"
+  local -r data="$(removeEmptyLines "${2}")"
+
+  if [[ "${delimiter}" != '' && "$(isEmptyString "${data}")" = 'false' ]]; then
+    local -r numberOfLines="$(wc -l <<<"${data}")"
+
+    if [[ "${numberOfLines}" -gt '0' ]]; then
+      local table=''
+      local i=1
+
+      for ((i = 1; i <= "${numberOfLines}"; i = i + 1)); do
+        local line=''
+        line="$(sed "${i}q;d" <<<"${data}")"
+
+        local numberOfColumns='0'
+        numberOfColumns="$(awk -F "${delimiter}" '{print NF}' <<<"${line}")"
+
+        # Add Line Delimiter
+
+        if [[ "${i}" -eq '1' ]]; then
+          table="${table}$(printf '%s#+' "$(repeatString '#+' "${numberOfColumns}")")"
+        fi
+
+        # Add Header Or Body
+
+        table="${table}\n"
+
+        local j=1
+
+        for ((j = 1; j <= "${numberOfColumns}"; j = j + 1)); do
+          table="${table}$(printf '#| %s' "$(cut -d "${delimiter}" -f "${j}" <<<"${line}")")"
+        done
+
+        table="${table}#|\n"
+
+        # Add Line Delimiter
+
+        if [[ "${i}" -eq '1' ]] || [[ "${numberOfLines}" -gt '1' && "${i}" -eq "${numberOfLines}" ]]; then
+          table="${table}$(printf '%s#+' "$(repeatString '#+' "${numberOfColumns}")")"
+        fi
+      done
+
+      if [[ "$(isEmptyString "${table}")" = 'false' ]]; then
+        echo -e "${table}" | column -s '#' -t | awk '/^\+/{gsub(" ", "-", $0)}1'
+      fi
+    fi
+  fi
+}
+
+function removeEmptyLines() {
+  local -r content="${1}"
+
+  echo "${content}" | sed '/^\s*$/d'
+}
+
+function repeatString() {
+  local -r string="${1}"
+  local -r numberToRepeat="${2}"
+
+  if [[ "${string}" != '' && "${numberToRepeat}" =~ ^[1-9][0-9]*$ ]]; then
+    local -r result="$(printf "%${numberToRepeat}s")"
+    echo "${result// /${string}}"
+  fi
+}
+
+function isEmptyString() {
+  local -r string="${1}"
+
+  if [[ "$(trimString "${string}")" = '' ]]; then
+    echo 'true' && return 0
+  fi
+
+  echo 'false' && return 1
+}
+
+function trimString() {
+  local -r string="${1}"
+
+  sed 's,^[[:blank:]]*,,' <<<"${string}" | sed 's,[[:blank:]]*$,,'
+}
+function joinBy {
+  local d=${1-} f=${2-}
+  if shift 2; then
+    printf %s "$f" "${@/#/$d}"
+  fi
+}
+
+function listDesc {
+  for branch in $local_branchs; do
+    config_desc=$(git config branch.$branch.description)
+    time="$(date "+%Y-%m-%d-%H:%M:%S")"
+    descs+=("$branch,$config_desc")
+  done
+  tablestr=$(joinBy $'\n' "${descs[@]}")
+  printTable ',' "$tablestr"
+}
+
+while getopts 'b:' OPTION; do
+  case "$OPTION" in
+  b)
+    the_branch="$OPTARG"
+    ;;
+  ?)
+    echo "script usage: $(basename $0) [-b somevalue]" >&2
+    exit 1
+    ;;
+  esac
+done
+shift "$(($OPTIND - 1))"
+
+userDesc=$1
+
+if [[ ! -z "$userDesc" ]]; then
+  userDesc=$1
+  res=$(git config --add branch.$the_branch.description "$userDesc")
+else
+  listDesc
+fi
