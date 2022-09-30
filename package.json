@@ -1,0 +1,25 @@
+{
+  "name": "git-remark",
+  "version": "0.1.0",
+  "description": "Adding remark to branches",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yidoon/git-remark.git"
+  },
+  "bin": {
+    "git-remark": "./git-remark"
+  },
+  "keywords": [
+    "git",
+    "remark"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Yidoon/git-remark/issues"
+  },
+  "homepage": "https://github.com/Yidoon/git-remark#readme"
+}

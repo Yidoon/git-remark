@@ -6,9 +6,10 @@ if ! git rev-parse --is-inside-work-tree &>/dev/null; then
   exit 1
 fi
 
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-the_branch=$current_branch
-local_branchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/heads/||')
+currentBranch=$(git rev-parse --abbrev-ref HEAD)
+theBranch=$currentBranch
+localBranchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/heads/||')
+allFlag=false
 
 declare -a descs=(branch,description)
 
@@ -101,7 +102,11 @@ function joinBy {
 }
 
 function listDesc {
-  for branch in $local_branchs; do
+  local branchs=($currentBranch)
+  if [ "$allFlag" = true ]; then
+    branchs=$localBranchs
+  fi
+  for branch in $branchs; do
     config_desc=$(git config branch.$branch.description)
     time="$(date "+%Y-%m-%d-%H:%M:%S")"
     descs+=("$branch,$config_desc")
@@ -110,10 +115,13 @@ function listDesc {
   printTable ',' "$tablestr"
 }
 
-while getopts 'b:' OPTION; do
+while getopts 'ab:' OPTION; do
   case "$OPTION" in
   b)
-    the_branch="$OPTARG"
+    theBranch="$OPTARG"
+    ;;
+  a)
+    allFlag=true
     ;;
   ?)
     echo "script usage: $(basename $0) [-b somevalue]" >&2
@@ -127,7 +135,7 @@ userDesc=$1
 
 if [[ ! -z "$userDesc" ]]; then
   userDesc=$1
-  res=$(git config --add branch.$the_branch.description "$userDesc")
+  res=$(git config --add branch.$theBranch.description "$userDesc")
 else
   listDesc
 fi
