@@ -6,17 +6,17 @@ Adding remark to branches
 ## Usage
 
 ```bash
-git remark
 # Show remark of current branch
+git remark
 
-git remark -a
 # List local branchs and their remark
+git remark -a
 
-git remark "adding a remark for current branch"
 # Adding remark for current branch
+git remark "adding a remark for current branch"
 
-git remark -b test "adding remark for test branch"
 # Add a remark to the specified branch
+git remark -b test "adding remark for test branch"
 ```
 
 ## Installation

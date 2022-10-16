@@ -132,8 +132,9 @@ done
 shift "$(($OPTIND - 1))"
 
 userDesc=$1
+paramsNum=$#
 
-if [[ ! -z "$userDesc" ]]; then
+if [[ !( -z "$userDesc") || ($paramsNum -ge 1 && -z "$userDesc") ]]; then
   userDesc=$1
   res=$(git config --add branch.$theBranch.description "$userDesc")
 else
