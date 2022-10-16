@@ -9,14 +9,18 @@ Adding remark to branches
 # Show remark of current branch
 git remark
 
-# List local branchs and their remark
+# List all local branchs and their remark
 git remark -a
+
+# List all local branchs with remark
+git remark -a -f
 
 # Adding remark for current branch
 git remark "adding a remark for current branch"
 
 # Add a remark to the specified branch
 git remark -b test "adding remark for test branch"
+
 ```
 
 ## Installation

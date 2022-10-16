@@ -10,6 +10,7 @@ currentBranch=$(git rev-parse --abbrev-ref HEAD)
 theBranch=$currentBranch
 localBranchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/heads/||')
 allFlag=false
+filterEmptyFlag=false # Filter branch with empty remark
 
 declare -a descs=(branch,description)
 
@@ -106,22 +107,34 @@ function listDesc {
   if [ "$allFlag" = true ]; then
     branchs=$localBranchs
   fi
-  for branch in $branchs; do
-    config_desc=$(git config branch.$branch.description)
-    time="$(date "+%Y-%m-%d-%H:%M:%S")"
-    descs+=("$branch,$config_desc")
-  done
+  if [[ "$filterEmptyFlag" = true && "$allFlag" = true ]]; then
+    for branch in $branchs; do
+      config_desc=$(git config branch.$branch.description)
+      if [[ !( -z "$config_desc") ]]; then
+        descs+=("$branch,$config_desc")
+      fi
+    done
+  fi
+  if [[ "$filterEmptyFlag" = false && "$allFlag" = true ]]; then
+    for branch in $branchs; do
+      config_desc=$(git config branch.$branch.description)
+      descs+=("$branch,$config_desc")
+    done
+  fi
   tablestr=$(joinBy $'\n' "${descs[@]}")
   printTable ',' "$tablestr"
 }
 
-while getopts 'ab:' OPTION; do
+while getopts 'fab:' OPTION; do
   case "$OPTION" in
   b)
     theBranch="$OPTARG"
     ;;
   a)
     allFlag=true
+    ;;
+  f)
+    filterEmptyFlag=true
     ;;
   ?)
     echo "script usage: $(basename $0) [-b somevalue]" >&2
