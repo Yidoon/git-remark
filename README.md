@@ -31,4 +31,13 @@ Adding the git-remark script into your path (e.g. add the directory to your PATH
 
 ### Install via NPM
 
+```JS
 npm install --global git-remark
+```
+
+## Testing
+
+```shell
+git submodule update --init
+bats test
+```
