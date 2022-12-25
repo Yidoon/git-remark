@@ -11,8 +11,9 @@ theBranch=$currentBranch
 localBranchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/heads/||')
 allFlag=false
 filterEmptyFlag=false # Filter branch with empty remark
+segmentedMeta=';'
 
-declare -a descs=(branch,description)
+declare -a descs=(branch,description,updated_at)
 
 function printTable() {
   local -r delimiter="${1}"
@@ -110,15 +111,20 @@ function listDesc {
   if [[ "$filterEmptyFlag" = true && "$allFlag" = true ]]; then
     for branch in $branchs; do
       config_desc=$(git config branch.$branch.description)
+      IFS=';'
+      read -a strarr <<<"$config_desc"
       if [[ !( -z "$config_desc") ]]; then
-        descs+=("$branch,$config_desc")
+        descs+=("$branch,${strarr[0]},${strarr[1]}")
       fi
     done
   fi
   if [[ "$filterEmptyFlag" = false && "$allFlag" = true ]]; then
     for branch in $branchs; do
       config_desc=$(git config branch.$branch.description)
-      descs+=("$branch,$config_desc")
+      # config_desc=$(git config branch.$branch.description)
+      IFS=';'
+      read -a strarr <<<"$config_desc"
+      descs+=("$branch,${strarr[0]},${strarr[1]}")
     done
   fi
   tablestr=$(joinBy $'\n' "${descs[@]}")
@@ -149,7 +155,9 @@ paramsNum=$#
 
 if [[ !( -z "$userDesc") || ($paramsNum -ge 1 && -z "$userDesc") ]]; then
   userDesc=$1
-  res=$(git config --add branch.$theBranch.description "$userDesc")
+  t=$(date "+%Y-%m-%d %H:%M:%S")
+  str="$userDesc$segmentedMeta$t"
+  res=$(git config --add branch.$theBranch.description "$str")
 else
   listDesc
 fi
