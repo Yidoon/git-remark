@@ -13,7 +13,7 @@ git remark
 git remark -a
 
 # List all local branchs with remark
-git remark -a -f
+git remark -f
 
 # Adding remark for current branch
 git remark "adding a remark for current branch"
