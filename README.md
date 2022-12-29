@@ -21,6 +21,9 @@ git remark "adding a remark for current branch"
 # Add a remark to the specified branch
 git remark -b test "adding remark for test branch"
 
+# Clear current branch remark
+git remark -c
+
 ```
 
 ## Installation

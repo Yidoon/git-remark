@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+HELP_MESSAGE="
+set remark for branch.
+https://github.com/Yidoon/git-remark
+
+Usage:
+   git remark <options> <input>
+
+ Options:
+   -b set remark to the specified branch
+   -f filter branchs, list all local branchs with remark
+   -a List all local branchs and their remark
+   -c clear current branch remark
+   -h Show help message"
+
 # are we in a git repo?
 if ! git rev-parse --is-inside-work-tree &>/dev/null; then
   echo "Not a git repository." 1>&2
@@ -12,8 +26,13 @@ localBranchs=$(git for-each-ref --format='%(refname)' refs/heads/ | sed 's|refs/
 allFlag=false
 filterEmptyFlag=false # Filter branch with empty remark
 segmentedMeta=';'
+clearMark=false
 
 declare -a descs=(branch,description,updated_at)
+
+help() {
+  echo "$HELP_MESSAGE"
+}
 
 function printTable() {
   local -r delimiter="${1}"
@@ -126,8 +145,16 @@ function listDesc {
   tablestr=$(joinBy $'\n' "${descs[@]}")
   printTable ',' "$tablestr"
 }
+function clearBranchMark {
+  emptyStr=""
+  res=$(git config --add branch.$theBranch.description "$emptyStr")
+}
 
-while getopts 'fab:' OPTION; do
+if [[ "$1" == "-h" ]]; then
+  help
+  exit 1
+fi
+while getopts 'cfab:' OPTION; do
   case "$OPTION" in
   b)
     theBranch="$OPTARG"
@@ -137,6 +164,9 @@ while getopts 'fab:' OPTION; do
     ;;
   f)
     filterEmptyFlag=true
+    ;;
+  c)
+    clearMark=true
     ;;
   ?)
     echo "script usage: $(basename $0) [-b somevalue]" >&2
@@ -154,6 +184,8 @@ if [[ !( -z "$userDesc") || ($paramsNum -ge 1 && -z "$userDesc") ]]; then
   t=$(date "+%Y-%m-%d %H:%M:%S")
   str="$userDesc$segmentedMeta$t"
   res=$(git config --add branch.$theBranch.description "$str")
+elif [ "$clearMark" = true ]; then
+  clearBranchMark
 else
   listDesc
 fi
